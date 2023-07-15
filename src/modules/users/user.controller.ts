@@ -9,7 +9,6 @@ import {
   Post,
   Put,
   Res,
-  UseFilters,
 } from '@nestjs/common';
 import { Response } from 'express';
 import {
@@ -19,13 +18,16 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { UserService } from './user.service';
-import { CreateUserDto } from './dto/user.dto';
-import { HttpExceptionFilter } from 'src/filters/http-exception.filter';
+import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
+import { ResponseFactory } from 'src/factories/response.factory';
 
 @ApiTags('Users')
 @Controller('api/users')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly resFactory: ResponseFactory,
+  ) {}
 
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all users' })
@@ -36,7 +38,7 @@ export class UserController {
   @Get()
   getAll(@Res() res: Response) {
     const data = this.userService.findAll();
-    return res.status(HttpStatus.OK).json(data);
+    return this.resFactory.success(res, { data });
   }
 
   @Post()
@@ -44,19 +46,24 @@ export class UserController {
     const data = await this.userService.create(req);
     if (!data) throw new HttpException('huhuh', 400);
 
-    return res.status(HttpStatus.CREATED).json(data);
+    return this.resFactory.success(res, { data });
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Res() res: Response) {
-    const data = this.userService.update(id);
+  update(
+    @Param('id') id: string,
+    @Body() req: UpdateUserDto,
+    @Res() res: Response,
+  ) {
+    const data = this.userService.update(id, req);
     if (!data) throw new HttpException('sfdf', 400);
 
-    return res.status(HttpStatus.OK).json(data);
+    return this.resFactory.success(res, { data });
   }
 
   @Delete(':id')
-  delete(@Param('id') id: string) {
-    return this.userService.remove(id);
+  delete(@Param('id') id: string, @Res() res: Response) {
+    this.userService.remove(id);
+    return this.resFactory.success(res, {});
   }
 }

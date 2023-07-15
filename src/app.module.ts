@@ -1,15 +1,19 @@
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { TodoModule } from './modules/todos/todo.module';
 import { UserModule } from './modules/users/user.module';
 import { User } from './modules/users/user.entity';
 import { APP_FILTER } from '@nestjs/core';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
+import { ResponseFormatMiddleware } from './middlewares/response-format.middleware';
+import { ResponseFactory } from './factories/response.factory';
+import { FactoryModule } from './factories/factory.module';
 
 @Module({
   imports: [
     TodoModule,
     UserModule,
+    FactoryModule,
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: 'localhost',
@@ -29,4 +33,8 @@ import { HttpExceptionFilter } from './filters/http-exception.filter';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(ResponseFormatMiddleware).forRoutes('*');
+  }
+}
