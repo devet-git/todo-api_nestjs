@@ -3,35 +3,30 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { TodoModule } from './modules/todos/todo.module';
 import { UserModule } from './modules/users/user.module';
 import { User } from './modules/users/user.entity';
-import { APP_FILTER } from '@nestjs/core';
-import { HttpExceptionFilter } from './filters/http-exception.filter';
 import { ResponseFormatMiddleware } from './middlewares/response-format.middleware';
-import { ResponseFactory } from './factories/response.factory';
 import { FactoryModule } from './factories/factory.module';
+import { ConfigModule } from '@nestjs/config';
+import appProviders from './app.provider';
 
 @Module({
   imports: [
+    ConfigModule.forRoot(),
     TodoModule,
     UserModule,
     FactoryModule,
     TypeOrmModule.forRoot({
       type: 'mysql',
-      host: 'localhost',
-      port: 3306,
-      username: 'root',
-      password: '466662%2073637#deveT',
-      database: 'db_todo_nestjs',
+      host: process.env.DB_HOST,
+      port: parseInt(process.env.DB_PORT),
+      username: process.env.DB_UNAME,
+      password: process.env.DB_PW,
+      database: process.env.DB_NAME,
       entities: [User],
       autoLoadEntities: true,
       synchronize: true,
     }),
   ],
-  providers: [
-    {
-      provide: APP_FILTER,
-      useClass: HttpExceptionFilter,
-    },
-  ],
+  providers: appProviders,
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

@@ -36,8 +36,8 @@ export class UserController {
     description: 'Successfully',
   })
   @Get()
-  getAll(@Res() res: Response) {
-    const data = this.userService.findAll();
+  async getAll(@Res() res: Response) {
+    const data = await this.userService.findAll();
     return this.resFactory.success(res, { data });
   }
 
